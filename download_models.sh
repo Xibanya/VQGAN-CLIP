@@ -3,15 +3,23 @@ LOC=checkpoints
 mkdir -p "$LOC"
 
 # Which models to download?
+XIBANYA=true
 IMAGENET_1024=false
-IMAGENET_16384=true
+IMAGENET_16384=false
 GUMBEL=false
-#WIKIART_1024=false
 WIKIART_16384=false
 COCO=false
 FACESHQ=false
 SFLCKR=false
 
+if [ "$XIBANYA" = true ] ; then
+  if [ ! -f "$LOC"/xibanya_f16_1024.yaml ]; then
+    curl -L -o "$LOC"/xibanya_f16_1024.yaml -C - 'https://huggingface.co/Xibanya/AestheticCities/raw/main/xibanya_f16_1024.yaml'
+  fi
+  if [ ! -f "$LOC"/xibanya_f16_1024.ckpt ]; then
+    curl -L -o "$LOC"/xibanya_f16_1024.ckpt -C - 'https://huggingface.co/Xibanya/AestheticCities/raw/main/xibanya_f16_1024.ckpt'
+  fi
+fi
 
 if [ "$IMAGENET_1024" = true ] ; then
   # imagenet_1024 - 958 MB:
@@ -62,17 +70,6 @@ if [ "$FACESHQ" = true ] ; then
     curl -L -o "$LOC"/faceshq.ckpt -C - 'https://app.koofr.net/content/links/a04deec9-0c59-4673-8b37-3d696fe63a5d/files/get/last.ckpt?path=%2F2020-11-13T21-41-45_faceshq_transformer%2Fcheckpoints%2Flast.ckpt' #FacesHQ
   fi
 fi
-
-# Link?
-#if [ "$WIKIART_1024" = true ] ; then   
-#  # wikiart_1024 - 958 MB: 
-#  if [ ! -f "$LOC"/wikiart_1024.yaml ]; then
-#    curl -L -o "$LOC"/wikiart_1024.yaml -C - 'http://mirror.io.community/blob/vqgan/wikiart.yaml' #WikiArt 1024
-#  fi
-#  if [ ! -f "$LOC"/wikiart_1024.ckpt ]; then
-#    curl -L -o "$LOC"/wikiart_1024.ckpt -C - 'http://mirror.io.community/blob/vqgan/wikiart.ckpt' #WikiArt 1024
-#  fi
-#fi
 
 if [ "$WIKIART_16384" = true ] ; then
   #wikiart_16384 - 1 GB: 

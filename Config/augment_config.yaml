@@ -1,0 +1,92 @@
+no_augments: False
+noise_fac: 0.1 # default 0.1. I don't know what this does
+
+augments: # if empty and no_augments is False, augments Af, Pe, Ji, Er used
+#  - Ji # random color jitter
+#  - Sh # random sharpness
+#  - Gn # random gaussian noise
+#  - Gb # random gaussian blur
+#  - Pe # random perspective
+#  - Ro # random rotation
+#  - Af # random affine
+#  - Et # Random Elastic Transform
+#  - Ts # Random Thin Plate Spline
+#  - Cr # Random Crop
+#  - Er # Random Erasing
+#  - Re # Random Resized Crop
+
+jitter:
+  use: False
+  brightness: 0.1 # default 0.1
+  contrast: 0.1 # default 0.1
+  saturation: 0.1 # default 0.1
+  hue: 0.1 # default 0.7
+  p: 0.1 # default 0.7
+  arg: Ji
+
+sharpness:
+  use: False
+  sharpness: 0.3 # default 0.3
+  p: 0.25 # default 0.5
+  arg: Sh
+  incompatible:
+    - updatedpooling
+
+erasing:
+  use: False
+  scale: # (.1, .4)
+    - .1
+    - .4
+  ratio: # (.3, 1 / .3)
+    - .3
+    - 1 / .3
+  same_on_batch: True # True
+  p: 0.3 # 0.7
+  arg: Er
+
+gaussian_noise:
+  use: False
+  mean: 0.0 # 0.0 The mean of the gaussian distribution.
+  std: 1.0 # 1.0 The standard deviation of the gaussian distribution.
+  same_on_batch: False # False apply the same transformation across the batch.
+  p: 0.25 # 0.5 probability of applying the transformation.
+  arg: Gn
+
+gaussian_blur:
+  use: False
+  kernel_size:
+    - 3
+    - 3
+  sigma: # the standard deviation of the kernel.
+    - 0.2
+    - 0.2
+  border_type: reflect # the padding mode to be applied before convolving.  The expected modes are: ``constant``, ``reflect``, ``replicate`` or ``circular``.
+  same_on_batch: False # apply the same transformation across the batch.
+  p: 0.25 # probability of applying the transformation.
+  arg: Gb
+
+# this doesn't work
+motion_blur:
+  use: False
+  kernel_size:
+    - 3
+    - 3
+  angle: 0.0
+  direction: 0.0
+  border_type: CONSTANT # CONSTANT = 0, REFLECT = 1, REPLICATE = 2, CIRCULAR = 3.
+  resample: NEAREST #  NEAREST = 0  BILINEAR = 1 BICUBIC = 2
+  same_on_batch: False
+  p: 0.5,
+  keepdim: False
+
+affine:
+  use: True
+  arg: Af
+  override: False
+  degrees: 15
+  translate: 0.1
+  p: 0.7
+  default:
+    padding_mode: zeros
+  updatedpooling:
+    padding_mode: border # border, reflection, zeros

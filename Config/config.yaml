@@ -1,0 +1,31 @@
+# must use command line args if false
+use_config: True
+
+prompts: a busy intersection
+init_image:
+image_prompts: #input/84.png #|input/149.png|input/188.png
+size:
+  - 512 #640
+  - 512 #360
+output_dir: output
+input_dir: input
+step_size: 0.1
+display_freq: 10
+max_iterations: 200
+seed: # leave bl0ank for random seed
+prompt_frequency:
+noise_prompt_weights: #list
+noise_prompt_seeds: #list
+init_weight:
+init_noise: gradient # None (blank), pixels, gradient
+weight_decay: 1.0e-9 # only used for DiffGrad, default 1e-9
+cudnn_determinism: False
+optimiser: RMSprop # Adam, AdamW, Adagrad, Adamax, DiffGrad, AdamP, RAdam, RMSprop
+# options: faceshq, vqgan_gumbel_f8_8192, wikiart_16384, vqgan_imagenet_f16_16384
+# leave blank to use vqgan_imagenet_f16_16384
+vqgan_type: custom-2021-11-19-0131 #custom-2021-11-19-0040 #custom-2021-11-18-1931 #vqgan_imagenet_f16_1024
+cutn: 18 # max I've been able to use is 18
+cut_pow: 100 #default 1
+cut_method: updated # original, updated, nrupdated, updatedpooling, latest. default=latest
+max_split_size_mb: 2048
+cudnn_benchmark: True # NR: True is a bit faster, but can lead to OOM. False is more deterministic.
