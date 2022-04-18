@@ -7,7 +7,7 @@ from torch.cuda import get_device_properties
 from torch_optimizer import DiffGrad, AdamP, RAdam
 from pathlib import Path
 from PIL import ImageFile
-from .colors import print_warn, print_blue, print_cyan
+from .Colors import print_warn, print_blue, print_cyan
 
 
 gc.collect()

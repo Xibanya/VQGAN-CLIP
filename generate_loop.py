@@ -20,7 +20,7 @@ from datetime import datetime
 from rudalle import get_realesrgan
 from rudalle.pipelines import super_resolution
 from CLIP import clip
-from XibGAN.colors import print_green, print_cyan, print_warn
+from XibGAN.Colors import print_green, print_cyan, print_warn
 from XibGAN.Utils import *
 from XibGAN.Config import (
     cfg, get_opt, get_perceptor, get_prompts, get_image_prompts, get_all_phrases, get_output_path,
@@ -105,8 +105,8 @@ def nine_crop(to_crop, nine_type):
     cropped = to_crop.crop((left, top, right, bottom))
     # each slice is half the size of the output res,
     # so will upscale x2 to avoid regular resize artifacts
-    realesrgan = get_realesrgan('x2', device='cuda')
-    cropped = super_resolution([cropped], realesrgan)[0]
+    #realesrgan = get_realesrgan('x2', device='cuda')
+    #cropped = super_resolution([cropped], realesrgan)[0]
     return cropped.resize((cfg['size'][0], cfg['size'][1]))
 
 
@@ -153,6 +153,8 @@ def checkin(i, losses, model, z, nine_type):
     out = synth(z, model)
     info = PngImagePlugin.PngInfo()
     info.add_text("Iterations", str(i))
+    info.add("Clip", cfg['clip_model'])
+    info.add("Method", cfg['cut_method'])
     new_img = TF.to_pil_image(out[0].cpu())
     if i == cfg['max_iterations'] and not cfg['ignore_alpha']:
         new_img = put_alpha(new_img, nine_type)
@@ -371,7 +373,7 @@ def do_it(nine_type):
 
 
 def make_composite():
-    composite = resize_image(get_start_image(), (cfg['size'][0] * 2, cfg['size'][1] * 2))
+    composite = get_start_image().resize((cfg['size'][0] * 2, cfg['size'][1] * 2), Image.LANCZOS)
     composite.save(path)
     order = [0, 2, 6, 8, 1, 3, 5, 7, 4]
     for n in order:

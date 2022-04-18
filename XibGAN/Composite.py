@@ -1,5 +1,8 @@
 import numpy as np
 from scipy.special import comb
+from PIL import Image
+from .Utils import resize_image
+from .Colors import print_warn
 
 
 def smoothstep(x_min: float, x_max: float, x: float, N=1):
@@ -70,7 +73,13 @@ def paste_on_base(base, image, i, path):
         i = 3
     else:
         return base
+
+    baseWidth, baseHeight = base.size
     w, h = image.size
+    if w * 2 != baseWidth:
+        w = int(baseWidth / 2)
+        image = image.resize((w, w), Image.BILINEAR)
+
     x = w if (i + 1) % 2 == 0 else 0
     y = w if i > 1 else 0
     base.paste(image, (x, y))
@@ -80,6 +89,11 @@ def paste_on_base(base, image, i, path):
 
 def paste_on_overlay(overlay, image, i, smooth, path):
     w, h = image.size
+    baseWidth, baseHeight = overlay.size
+    if w * 2 != baseWidth:
+        w = int(baseWidth / 2)
+        image = image.resize((w, w), Image.BILINEAR)
+
     half_width = int(w / 2)
     image.putalpha(255)
     if i == 4:
