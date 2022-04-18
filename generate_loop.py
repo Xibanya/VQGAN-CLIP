@@ -29,7 +29,18 @@ from XibGAN.Config import (
     set_seed
 )
 from XibGAN.Augments import get_cutout_function
-from XibGAN.Composite import get_base, get_overlay, paste_on_base, paste_on_overlay
+from XibGAN.Composite import paste_on_base, paste_on_overlay
+
+
+def get_start_image():
+    in_dir = Path(cfg['input_dir']).resolve()
+    init_image = str(in_dir.joinpath(cfg['init_image'])) if cfg['init_image'] and cfg['init_image'] != "None" else None
+    return Image.open(init_image)
+
+
+now = datetime.now().strftime("%dT%H-%M-%S")
+filename = f"{cfg['init_image'].split('.')[0]}_Composite_{now}.png"
+
 
 
 # Vector quantize
@@ -94,7 +105,9 @@ def nine_crop(to_crop, nine_type):
 
     print_green(f"Nine type: {nine_type}")
     cropped = to_crop.crop((left, top, right, bottom))
-    realesrgan = get_realesrgan(cfg['realesrgan_model'], device='cuda')
+    # each slice is half the size of the output res,
+    # so will upscale x2 to avoid regular resize artifacts
+    realesrgan = get_realesrgan('x2', device='cuda')
     cropped = super_resolution([cropped], realesrgan)[0]
     return cropped.resize((cfg['size'][0], cfg['size'][1]))
 
@@ -113,12 +126,6 @@ def quant_image_from_path(image_path: str, vq_model, nine_type, sideX, sideY, de
     else:
         loaded_image = nine_crop(Image.open(image_path), nine_type)
     return quantize_image(loaded_image, vq_model, sideX, sideY, device)
-
-
-def get_start_image():
-    in_dir = Path(cfg['input_dir']).resolve()
-    init_image = str(in_dir.joinpath(cfg['init_image'])) if cfg['init_image'] and cfg['init_image'] != "None" else None
-    return Image.open(init_image)
 
 
 def put_alpha(new_img, nine_type):
@@ -153,13 +160,19 @@ def checkin(i, losses, model, z, nine_type):
     new_img = TF.to_pil_image(out[0].cpu())
     if i == cfg['max_iterations'] and not cfg['ignore_alpha']:
         new_img = put_alpha(new_img, nine_type)
-    if cfg['realesrgan'] and (i == cfg['max_iterations'] or cfg['upscale_always']):
+    if nine_type is None and cfg['realesrgan'] and \
+            (i == cfg['max_iterations'] or cfg['upscale_always']):
         images = [new_img]
         realesrgan = get_realesrgan(cfg['realesrgan_model'], device='cuda')
         images = super_resolution(images, realesrgan)
         new_img = images[0]
     if nine_type is None or cfg['save_nine']:
         new_img.save(get_output_path(nine_type), pnginfo=info)
+    else:
+        composite = Image.open(filename)
+        composite = paste_on_base(composite, new_img, nine_type, cfg['output_dir'], filename)
+        composite = paste_on_overlay(composite, new_img, nine_type, cfg['smooth'], cfg['output_dir'], filename)
+        composite.save(filename)
     return new_img
 
 
@@ -361,31 +374,22 @@ def do_it(nine_type):
 
 
 def make_composite():
-    images = []
-    now = datetime.now().strftime("%dT%H-%M-%S")
-    name = f"{cfg['init_image'].split('.')[0]}_Composite_{now}"
-    composite = get_start_image()
-    if cfg['realesrgan']:
-        realesrgan = get_realesrgan(cfg['realesrgan_model'], device='cuda')
-        composite = super_resolution([composite], realesrgan)[0]
-    composite.save(f'{cfg["output_dir"]}/{name}.png')
-
+    composite = resize_image(get_start_image(), (cfg['size'][0] * 2, cfg['size'][1] * 2))
+    composite.save(filename)
     order = [0, 2, 6, 8, 1, 3, 5, 7, 4]
     for n in order:
         o_name = get_output_path(n)
         if Path.exists(o_name):
             print_green(f'{o_name} already exists, nice')
             next_img = Image.open(o_name)
+            composite = paste_on_base(composite, next_img, n, cfg['output_dir'], filename)
+            composite = paste_on_overlay(composite, next_img, n, cfg['smooth'], cfg['output_dir'], filename)
         else:
-            next_img = do_it(n)
-        next_img.putalpha(255)
-        images.append(next_img)
-        composite = paste_on_base(composite, next_img, n, cfg['output_dir'], name)
-        composite = paste_on_overlay(composite, next_img, n, cfg['smooth'], cfg['output_dir'], name)
-    realesrgan = get_realesrgan('x2', device='cuda')
+            do_it(n)
+    realesrgan = get_realesrgan('x4', device='cuda')
     composite = super_resolution([composite], realesrgan)[0]
-    composite.save(f'{cfg["output_dir"]}/{name}.png')
-    print_cyan(f'saved {name} to {cfg["output_dir"]}')
+    composite.save(filename)
+    print_cyan(f'saved {filename}')
 
 
 make_composite()
