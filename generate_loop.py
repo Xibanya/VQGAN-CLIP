@@ -388,10 +388,8 @@ def make_composite():
         else:
             composite = do_it(n)
     if cfg['realesrgan']:
-        upscaled = Image.new("RGB", composite.size, (255, 255, 255))
-        upscaled.paste(composite, mask=composite.split()[3])
-        realesrgan = get_realesrgan(cfg['realesrgan_model'], device='cuda')
-        composite = super_resolution([upscaled], realesrgan)[0]
+        composite = super_resolution([composite],
+                                     get_realesrgan(cfg['realesrgan_model'], device='cuda'))[0]
     composite.save(path)
     print_cyan(f'saved {path}')
     return composite
@@ -405,4 +403,3 @@ def make_combined():
 
 
 make_composite()
-#make_combined()

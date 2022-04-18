@@ -113,7 +113,7 @@ def paste_on_overlay(overlay, image, i, smooth, path):
     image.putalpha(255)
     if i == 4:
         img4Mask = center_fade(image, smooth=smooth)
-        overlay.alpha_composite(img4Mask, (half_width, half_width))
+        overlay.paste(image, (half_width, half_width), img4Mask)
     elif i == 0 or i % 2 == 0:
         return overlay
     else:
@@ -127,10 +127,10 @@ def paste_on_overlay(overlay, image, i, smooth, path):
             i = 3
         if i == 0 or i == 3:
             a_mask = horizontal_fade(image, smooth=smooth)
-            overlay.alpha_composite(a_mask, (half_width, w if i > 1 else 0))
+            overlay.paste(image, (half_width, w if i > 1 else 0), a_mask)
         else:
             a_mask = vertical_fade(image, smooth=smooth)
-            overlay.alpha_composite(a_mask, (w if i > 1 else 0, half_width))
+            overlay.paste(image, (w if i > 1 else 0, half_width), a_mask)
 
     overlay.save(path)
     return overlay
