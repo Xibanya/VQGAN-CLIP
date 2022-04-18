@@ -61,7 +61,7 @@ def paste_on_base(base, image, i, output_dir, name):
     x = w if (i + 1) % 2 == 0 else 0
     y = w if i > 1 else 0
     base.paste(image, (x, y))
-    filename = f'{output_dir}/{name}_Base'
+    filename = f'{output_dir}/{name}'
     base.save(f'{filename}.png')
     print_cyan(f'img {i} pasted on {filename}')
     return base
@@ -110,4 +110,33 @@ def get_overlay(
     if save:
         now = datetime.now().strftime("%dT%H-%M-%S")
         overlay.save(f'{output_dir}/{name}_Overlay_{now}.png')
+    return overlay
+
+
+def paste_on_overlay(overlay, image, i, smooth, output_dir, name):
+    w, h = image.size
+    half_width = int(w / 2)
+    if i == 4:
+        img4Mask = horizontal_fade(image, smooth)
+        img4Mask = vertical_fade(img4Mask, smooth)
+        overlay.paste(image, (half_width, half_width), mask=img4Mask)
+    elif i == 0 or i % 2 == 0:
+        return overlay
+    else:
+        if i == 1:
+            i = 0
+        elif i == 3:
+            i = 1
+        elif i == 5:
+            i = 2
+        elif i == 7:
+            i = 3
+        if i == 0 or i == 3:
+            a_mask = horizontal_fade(image, smooth=smooth)
+            overlay.paste(image, (half_width, w if i > 1 else 0), mask=a_mask)
+        else:
+            a_mask = vertical_fade(image, smooth=smooth)
+            overlay.paste(image, (w if i > 1 else 0, half_width), mask=a_mask)
+
+    overlay.save(f'{output_dir}/{name}.png')
     return overlay
