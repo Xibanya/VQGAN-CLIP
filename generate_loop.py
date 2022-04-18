@@ -29,7 +29,7 @@ from XibGAN.Config import (
     set_seed
 )
 from XibGAN.Augments import get_cutout_function
-from XibGAN.Composite import get_base, get_overlay, paste_on_base
+from XibGAN.Composite import get_base, get_overlay, paste_on_base, paste_on_overlay
 
 
 # Vector quantize
@@ -113,6 +113,12 @@ def quant_image_from_path(image_path: str, vq_model, nine_type, sideX, sideY, de
     else:
         loaded_image = nine_crop(Image.open(image_path), nine_type)
     return quantize_image(loaded_image, vq_model, sideX, sideY, device)
+
+
+def get_start_image():
+    in_dir = Path(cfg['input_dir']).resolve()
+    init_image = str(in_dir.joinpath(cfg['init_image'])) if cfg['init_image'] and cfg['init_image'] != "None" else None
+    return Image.open(init_image)
 
 
 def put_alpha(new_img, nine_type):
@@ -356,10 +362,16 @@ def do_it(nine_type):
 
 def make_composite():
     images = []
-    name = cfg['init_image'].split('.')[0]
-    size = cfg['size'][0] * (4 if cfg['realesrgan'] else 2)
-    base = Image.new("RGB", (size, size))
-    for n in range(0, 9):
+    now = datetime.now().strftime("%dT%H-%M-%S")
+    name = f"{cfg['init_image'].split('.')[0]}_Composite_{now}"
+    composite = get_start_image()
+    if cfg['realesrgan']:
+        realesrgan = get_realesrgan(cfg['realesrgan_model'], device='cuda')
+        composite = super_resolution([composite], realesrgan)[0]
+    composite.save(f'{cfg["output_dir"]}/{name}.png')
+
+    order = [0, 2, 6, 8, 1, 3, 5, 7, 4]
+    for n in order:
         o_name = get_output_path(n)
         if Path.exists(o_name):
             print_green(f'{o_name} already exists, nice')
@@ -368,19 +380,12 @@ def make_composite():
             next_img = do_it(n)
         next_img.putalpha(255)
         images.append(next_img)
-        if cfg['save_base']:
-            base = paste_on_base(base, next_img, n, cfg['output_dir'], name)
-    if not cfg['save_base']:
-        base = get_base(images)
-    overlay = get_overlay(images, cfg['smooth'], cfg['save_overlay'], name, cfg['output_dir'])
-    composite = base.copy()
-    composite.paste(overlay, (0, 0), mask=overlay)
+        composite = paste_on_base(composite, next_img, n, cfg['output_dir'], name)
+        composite = paste_on_overlay(composite, next_img, n, cfg['smooth'], cfg['output_dir'], name)
     realesrgan = get_realesrgan('x2', device='cuda')
     composite = super_resolution([composite], realesrgan)[0]
-    now = datetime.now().strftime("%dT%H-%M-%S")
-    filename = f'{name}_Composite_{now}'
-    composite.save(f'{cfg["output_dir"]}/{filename}.png')
-    print_cyan(f'saved {filename} to {cfg["output_dir"]}')
+    composite.save(f'{cfg["output_dir"]}/{name}.png')
+    print_cyan(f'saved {name} to {cfg["output_dir"]}')
 
 
 make_composite()
