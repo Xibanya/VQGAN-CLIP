@@ -1,31 +1,24 @@
-import yaml
-import torch
-from pathlib import Path
-
-from PIL import ImageFile
-import argparse
-from torch.cuda import get_device_properties
-from torchvision import transforms
 import os
 import gc
-from .colors import print_warn, print_blue, print_cyan
-from torch_optimizer import DiffGrad, AdamP, RAdam
+import yaml
+import torch
 from torch import optim
+from torch.cuda import get_device_properties
+from torch_optimizer import DiffGrad, AdamP, RAdam
+from pathlib import Path
+from PIL import ImageFile
+from .Colors import print_warn, print_blue, print_cyan
+
 
 gc.collect()
 torch.cuda.empty_cache()
 
-CONFIG_PATH = 'config'
-vq_parser = argparse.ArgumentParser(description='Image generation using VQGAN+CLIP')
-vq_parser.add_argument("-b", "--base", type=str, help="Config Path", default=CONFIG_PATH, dest='config_path')
-args = vq_parser.parse_args()
-
-CONFIG_DIRECTORY = 'Config'
+CONFIG_DIRECTORY = 'Config/config.yaml'
 DEFAULT_CLIP_MODEL = 'ViT-B/32'
 DEFAULT_PROMPT = '90s anime aesthetic'
 
 AUGMENT_CONFIG = 'augment_config.yaml'
-with open(f"{CONFIG_DIRECTORY}/{args.config_path}.yaml", "r") as f:
+with open(CONFIG_DIRECTORY, "r") as f:
     cfg = yaml.load(f, Loader=yaml.FullLoader)
 
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = f"max_split_size_mb:{cfg['max_split_size_mb']}"
@@ -55,10 +48,10 @@ def get_nine_prefix(nine_type):
         index = 6 if 'S' in nine_type else 3 if 'N' not in nine_type else 0
         toAdd = 2 if 'E' in nine_type else 1 if 'W' not in nine_type else 0
         index = index + toAdd
-        return f"{index:02d}_"
+        return f"{index}_"
     elif type(nine_type) == int:
         index = nine_type
-        return f"{index:02d}_"
+        return f"{index}_"
     else:
         return ""
 

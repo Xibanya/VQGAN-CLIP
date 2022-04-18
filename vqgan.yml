@@ -89,4 +89,5 @@ dependencies:
     - wcwidth==0.2.5
     - werkzeug==2.0.1
     - yarl==1.6.3
+    - rudalle==0.0.1rc11
 prefix: /home/nerdy/anaconda3/envs/vqgan

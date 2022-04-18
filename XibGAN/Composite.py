@@ -1,8 +1,6 @@
 import numpy as np
 from scipy.special import comb
 
-from .colors import print_cyan
-
 
 def smoothstep(x_min: float, x_max: float, x: float, N=1):
     x = np.clip((x - x_min) / (x_max - x_min), 0, 1)
@@ -78,7 +76,6 @@ def paste_on_base(base, image, i, output_dir, name):
     base.paste(image, (x, y))
     filename = f'{output_dir}/{name}'
     base.save(f'{filename}.png')
-    print_cyan(f'img {i} pasted on {filename}')
     return base
 
 

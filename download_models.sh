@@ -41,6 +41,7 @@ if [ "$IMAGENET_16384" = true ] ; then
   fi
 fi
 
+# xibnote: I have 32gb RAM and I never gotten gumbel to work without getting OOM
 if [ "$GUMBEL" = true ] ; then
   # vqgan_gumbel_f8_8192 (was openimages_f16_8192) - 376 MB:
   if [ ! -f "$LOC"/vqgan_gumbel_f8_8192.yaml ]; then

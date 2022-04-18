@@ -7,8 +7,6 @@ import os
 import sys
 from urllib.request import urlopen
 
-# pip install taming-transformers doesn't work with Gumbel, but does not yet work with coco etc
-# appending the path does work with Gumbel, but gives ModuleNotFoundError: No module named 'transformers' for coco etc
 sys.path.append('taming-transformers')
 from pathlib import Path
 
@@ -22,7 +20,7 @@ from datetime import datetime
 from rudalle import get_realesrgan
 from rudalle.pipelines import super_resolution
 from CLIP import clip
-from XibGAN.colors import print_green, print_cyan, print_warn
+from XibGAN.Colors import print_green, print_cyan, print_warn
 from XibGAN.Utils import *
 from XibGAN.Config import (
     cfg, get_opt, get_perceptor, get_prompts, get_image_prompts, get_all_phrases, get_output_path,
@@ -40,7 +38,6 @@ def get_start_image():
 
 now = datetime.now().strftime("%dT%H-%M-%S")
 filename = f"{cfg['init_image'].split('.')[0]}_Composite_{now}.png"
-
 
 
 # Vector quantize
@@ -148,14 +145,12 @@ def put_alpha(new_img, nine_type):
     return new_img
 
 
-# @torch.no_grad()
 @torch.inference_mode()
 def checkin(i, losses, model, z, nine_type):
     losses_str = ', '.join(f'{loss.item():g}' for loss in losses)
     tqdm.write(f'i: {i}, loss: {sum(losses).item():g}, losses: {losses_str}')
     out = synth(z, model)
     info = PngImagePlugin.PngInfo()
-    # info.add_text('comment', f'{prompts}')
     info.add_text("Iterations", str(i))
     new_img = TF.to_pil_image(out[0].cpu())
     if i == cfg['max_iterations'] and not cfg['ignore_alpha']:
@@ -177,7 +172,6 @@ def checkin(i, losses, model, z, nine_type):
 
 
 def ascend_txt(i, z, perceptor, z_orig, make_cutouts, prompts, model):
-    # global i
     out = synth(z, model)
     normalize = transforms.Normalize(
         mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])

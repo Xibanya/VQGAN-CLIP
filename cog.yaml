@@ -22,5 +22,6 @@ build:
     - "kornia==0.6.1"
     - "pytorch-lightning==1.5.0"
     - "omegaconf==2.1.1"
+    - "rudalle==0.0.1rc11"
 
 predict: "predict.py:Predictor"
