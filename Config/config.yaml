@@ -1,31 +1,55 @@
 # must use command line args if false
 use_config: True
 
-prompts: a busy intersection
-init_image:
-image_prompts: #input/84.png #|input/149.png|input/188.png
+prompts: a beautiful neon miami aesthetic scene by studio ghibli|photo:-1
+init_image: c68_3.png
+image_prompts:
 size:
-  - 512 #640
-  - 512 #360
-output_dir: output
+  - 512
+  - 512
+output_dir: output/composite/3
 input_dir: input
-step_size: 0.1
+step_size: 0.025
 display_freq: 10
-max_iterations: 200
-seed: # leave bl0ank for random seed
+max_iterations: 100
+seed: # leave blank for random
 prompt_frequency:
 noise_prompt_weights: #list
 noise_prompt_seeds: #list
 init_weight:
-init_noise: gradient # None (blank), pixels, gradient
-weight_decay: 1.0e-9 # only used for DiffGrad, default 1e-9
+init_noise: #gradient # None (blank), pixels, gradient
+optimiser: DiffGrad # Adam, AdamW, Adagrad, Adamax, DiffGrad, AdamP, RAdam, RMSprop
+# options: faceshq, vqgan_gumbel_f8_8192, wikiart_16384, vqgan_imagenet_f16_16384, vqgan_imagenet_f16_1024
+# leave blank to use default model
+vqgan_type: #sm135 #BB175
+cutn: 12 # max I've been able to use is 18
+cut_pow: 1 #default 1
+cut_method: latest # original, updated, nrupdated, updatedpooling, latest. default=latest
+default_config: vqgan_imagenet_f16_1024 # used if no config found
+default_model: vqgan_imagenet_f16_16384
+clip_model: ViT-B/16 # default: ViT-B/32; also ViT-B/16, RN50, RN101, RN50x4, RN50x16
+weight_decay: 1e-11 # only used for DiffGrad, default 1e-9
+cuda_device: cuda:0
 cudnn_determinism: False
-optimiser: RMSprop # Adam, AdamW, Adagrad, Adamax, DiffGrad, AdamP, RAdam, RMSprop
-# options: faceshq, vqgan_gumbel_f8_8192, wikiart_16384, vqgan_imagenet_f16_16384
-# leave blank to use vqgan_imagenet_f16_16384
-vqgan_type: custom-2021-11-19-0131 #custom-2021-11-19-0040 #custom-2021-11-18-1931 #vqgan_imagenet_f16_1024
-cutn: 18 # max I've been able to use is 18
-cut_pow: 100 #default 1
-cut_method: updated # original, updated, nrupdated, updatedpooling, latest. default=latest
 max_split_size_mb: 2048
 cudnn_benchmark: True # NR: True is a bit faster, but can lead to OOM. False is more deterministic.
+ignore_alpha: True #if this is an alpha cutout, don't copy over the initial image's alpha channel
+realesrgan: True # upscale
+realesrgan_model: x2 # probably gonna get OOM with x4
+upscale_always: False # upscale every checkpoint
+# None (blank), integer from 0 to 8, or ordinal directions as string (NW, SE, etc)
+nine_type:
+save_nine: True
+smooth: 0.3 # composite smoothstep lower bound
+save_base: True
+save_overlay: True
+slice_prompts:
+  - a telephone pole
+  - a telephone pole in front of the glass facade of a downtown department store
+  - the glass facade of a downtown department store
+  - a building downtown behind a telephone pole
+  - a telephone pole in front of the glass facade of a downtown department store that has a large neon sign with its name on it
+  - a downtown department store that has a large neon sign with its name on it
+  - a downtown city block
+  - the shop windows of a downtown department store that has a large neon sign with its name on it
+  - the glass doors of  a downtown department store below a large neon sign with the name of the store on it

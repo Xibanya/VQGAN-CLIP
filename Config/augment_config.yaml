@@ -1,18 +1,18 @@
-no_augments: False
-noise_fac: 0.1 # default 0.1. I don't know what this does
+no_augments: True
+noise_fac: 0.1 # default 0.1, can also be False. I don't know what this does
 
-augments: # if empty and no_augments is False, augments Af, Pe, Ji, Er used
-#  - Ji # random color jitter
-#  - Sh # random sharpness
-#  - Gn # random gaussian noise
-#  - Gb # random gaussian blur
+augments: # order matters. if empty and no_augments is False, augments Af, Pe, Ji, Er used (in that order)
+  - Ji # random color jitter
+  - Sh # random sharpness
+  - Gn # random gaussian noise
+  - Gb # random gaussian blur
 #  - Pe # random perspective
 #  - Ro # random rotation
 #  - Af # random affine
-#  - Et # Random Elastic Transform
+  - Et # Random Elastic Transform
 #  - Ts # Random Thin Plate Spline
 #  - Cr # Random Crop
-#  - Er # Random Erasing
+  - Er # Random Erasing
 #  - Re # Random Resized Crop
 
 jitter:
@@ -21,7 +21,7 @@ jitter:
   contrast: 0.1 # default 0.1
   saturation: 0.1 # default 0.1
   hue: 0.1 # default 0.7
-  p: 0.1 # default 0.7
+  p: 0.5 # default 0.7
   arg: Ji
 
 sharpness:
@@ -39,7 +39,7 @@ erasing:
     - .4
   ratio: # (.3, 1 / .3)
     - .3
-    - 1 / .3
+    - .333333
   same_on_batch: True # True
   p: 0.3 # 0.7
   arg: Er
@@ -82,11 +82,51 @@ motion_blur:
 affine:
   use: True
   arg: Af
-  override: False
   degrees: 15
   translate: 0.1
+  shear: 5
   p: 0.7
-  default:
-    padding_mode: zeros
-  updatedpooling:
-    padding_mode: border # border, reflection, zeros
+  padding_mode: zeros # border, reflection, zeros, zeros default; border is default to updated methods
+
+perspective:
+  use: False
+  arg: Pe
+  distortion_scale: 0.7
+  p: 0.7
+
+crop:
+  use: False
+  arg: Cr
+  pad_if_needed: True
+  padding_mode: reflect
+  p: 0.5
+
+elastic_transform:
+  use: False
+  arg: Et
+  p: 0.7
+
+rotation:
+  use: False
+  arg: Ro
+  degrees: 15
+  p: 0.7
+
+resized_crop:
+  use: False
+  arg: Re
+  cropping_mode: resample
+  scale:
+    - 0.1
+    - 1
+  ratio:
+    - 0.75
+    - 1.333
+  p: 0.5
+
+thin_plate_spline:
+  use: False
+  arg: Ts
+  scale: 0.8
+  same_on_batch: True
+  p: 0.7

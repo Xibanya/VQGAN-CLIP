@@ -6,6 +6,6 @@ zoom_scale: 0.99 # default 0.99
 zoom_shift_x: 0 # default 0
 zoom_shift_y: 0 # default 0
 video_length: 10 # default 10 | Video length in seconds (not interpolated)
-output_video_fps: 0 # Create an interpolated video (Nvidia GPU only) with this fps (min 10. best set to 30 or 60)", default=0
+output_video_fps: 10 # Create an interpolated video (Nvidia GPU only) with this fps (min 10. best set to 30 or 60)", default=0
 input_video_fps: 15 # When creating an interpolated video, use this as the input fps to interpolate from (>0 & <ofps)", default=15
 video_style_dir: # Directory with video frames to style default=None
