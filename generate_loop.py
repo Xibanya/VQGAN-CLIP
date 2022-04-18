@@ -33,12 +33,19 @@ from XibGAN.Composite import paste_on_base, paste_on_overlay
 def get_start_image():
     in_dir = Path(cfg['input_dir']).resolve()
     init_image = str(in_dir.joinpath(cfg['init_image'])) if cfg['init_image'] and cfg['init_image'] != "None" else None
-    return Image.open(init_image)
+    img = Image.open(init_image)
+    target = int(cfg['size'][0] * 2)
+    w, h = img.size
+    if w < target:
+        img = super_resolution([img], get_realesrgan('x2', device='cuda'))[0]
+    img = img.resize((target, target), Image.LANCZOS)
+    return img
 
 
 now = datetime.now().strftime("%dT%H-%M-%S")
 filename = f"{cfg['init_image'].split('.')[0]}_Composite_{now}.png"
 path = get_output_dir().joinpath(filename)
+start_image = get_start_image()
 
 
 # Vector quantize
@@ -122,7 +129,7 @@ def quant_image_from_path(image_path: str, vq_model, nine_type, sideX, sideY, de
     if 'http' in image_path:
         loaded_image = Image.open(urlopen(image_path))
     else:
-        loaded_image = nine_crop(Image.open(image_path), nine_type)
+        loaded_image = nine_crop(start_image, nine_type)
     return quantize_image(loaded_image, vq_model, sideX, sideY, device)
 
 
@@ -130,8 +137,7 @@ def put_alpha(new_img, nine_type):
     in_dir = Path(cfg['input_dir']).resolve()
     init_image = str(in_dir.joinpath(cfg['init_image'])) if cfg['init_image'] and cfg['init_image'] != "None" else None
     if init_image is not None and cfg['ignore_alpha'] is False:
-        start_img = Image.open(init_image)
-        start_img = nine_crop(start_img, str(nine_type))
+        start_img = nine_crop(start_image, str(nine_type))
         init_image_has_alpha = has_alpha(start_img)
         w, h = new_img.size
         im_a = resize_image(start_img.convert('RGBA').split()[-1], (w, h)) if init_image_has_alpha else None
@@ -373,7 +379,7 @@ def do_it(nine_type):
 
 
 def make_composite():
-    composite = get_start_image().resize((cfg['size'][0] * 2, cfg['size'][1] * 2), Image.LANCZOS)
+    composite = start_image.copy()
     composite.save(path)
     order = [0, 2, 6, 8, 1, 3, 5, 7, 4]
     for n in order:
