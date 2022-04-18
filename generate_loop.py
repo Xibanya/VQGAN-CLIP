@@ -110,10 +110,6 @@ def nine_crop(to_crop, nine_type):
 
     print_green(f"Nine type: {nine_type}")
     cropped = to_crop.crop((left, top, right, bottom))
-    # each slice is half the size of the output res,
-    # so will upscale x2 to avoid regular resize artifacts
-    #realesrgan = get_realesrgan('x2', device='cuda')
-    #cropped = super_resolution([cropped], realesrgan)[0]
     return cropped.resize((cfg['size'][0], cfg['size'][1]))
 
 
@@ -159,8 +155,6 @@ def checkin(i, losses, model, z, nine_type):
     out = synth(z, model)
     info = PngImagePlugin.PngInfo()
     info.add_text("Iterations", str(i))
-    info.add("Clip", cfg['clip_model'])
-    info.add("Method", cfg['cut_method'])
     new_img = TF.to_pil_image(out[0].cpu())
     if i == cfg['max_iterations'] and not cfg['ignore_alpha']:
         new_img = put_alpha(new_img, nine_type)
@@ -172,7 +166,6 @@ def checkin(i, losses, model, z, nine_type):
         new_img = images[0]
     if nine_type is None or cfg['save_nine']:
         new_img.save(get_output_path(nine_type), pnginfo=info)
-
     if nine_type is not None:
         composite = Image.open(path)
         composite = paste_on_base(composite, new_img, nine_type, path)
@@ -384,7 +377,8 @@ def make_composite():
     order = [0, 2, 6, 8, 1, 3, 5, 7, 4]
     for n in order:
         o_name = get_output_path(n)
-        if Path.exists(o_name):
+        next_img = Image.open(o_name) if Path.exists(o_name) else None
+        if next_img:
             print_green(f'{o_name} already exists, nice')
             next_img = Image.open(o_name)
             composite = paste_on_base(composite, next_img, n, path)
