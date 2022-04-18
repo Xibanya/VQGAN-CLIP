@@ -112,7 +112,7 @@ def get_updated_pooling_augments():
     augment_list = [
         get_color_jitter(),
         get_erasing(),
-        get_affine(),
+        get_affine('updatedpooling'),
         K.RandomPerspective(distortion_scale=0.7, p=0.7)
     ]
     return augment_list
@@ -153,7 +153,7 @@ def get_augment_list(cut_method, cut_size):
         augment_list.append(get_erasing())
     if (afg['affine']['use'] or afg['affine']['arg'] in augments[0]) \
             or cm == 'updatedpooling':
-        augment_list.append(get_affine())
+        augment_list.append(get_affine(cut_method))
     if (afg['perspective']['use'] or afg['perspective']['arg'] in augments[0]) \
             or cm == 'updatedpooling':
         augment_list.append(K.RandomPerspective(

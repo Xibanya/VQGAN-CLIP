@@ -59,7 +59,7 @@ def center_fade(im, smooth: float = 0.25):
     return im
 
 
-def paste_on_base(base, image, i, output_dir, name):
+def paste_on_base(base, image, i, path):
     if i == 0:
         i = 0
     elif i == 2:
@@ -74,12 +74,11 @@ def paste_on_base(base, image, i, output_dir, name):
     x = w if (i + 1) % 2 == 0 else 0
     y = w if i > 1 else 0
     base.paste(image, (x, y))
-    filename = f'{output_dir}/{name}'
-    base.save(f'{filename}.png')
+    base.save(path)
     return base
 
 
-def paste_on_overlay(overlay, image, i, smooth, output_dir, name):
+def paste_on_overlay(overlay, image, i, smooth, path):
     w, h = image.size
     half_width = int(w / 2)
     image.putalpha(255)
@@ -104,5 +103,5 @@ def paste_on_overlay(overlay, image, i, smooth, output_dir, name):
             a_mask = vertical_fade(image, smooth=smooth)
             overlay.paste(image, (w if i > 1 else 0, half_width), mask=a_mask)
 
-    overlay.save(f'{output_dir}/{name}.png')
+    overlay.save(path)
     return overlay

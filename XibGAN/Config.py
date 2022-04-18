@@ -7,7 +7,7 @@ from torch.cuda import get_device_properties
 from torch_optimizer import DiffGrad, AdamP, RAdam
 from pathlib import Path
 from PIL import ImageFile
-from .Colors import print_warn, print_blue, print_cyan
+from .colors import print_warn, print_blue, print_cyan
 
 
 gc.collect()
@@ -48,10 +48,10 @@ def get_nine_prefix(nine_type):
         index = 6 if 'S' in nine_type else 3 if 'N' not in nine_type else 0
         toAdd = 2 if 'E' in nine_type else 1 if 'W' not in nine_type else 0
         index = index + toAdd
-        return f"{index}_"
+        return f"{index:02d}_"
     elif type(nine_type) == int:
         index = nine_type
-        return f"{index}_"
+        return f"{index:02d}_"
     else:
         return ""
 
@@ -88,6 +88,13 @@ def get_cut_label():
     return label
 
 
+def get_output_dir():
+    out_dir = Path(cfg['output_dir']).resolve()
+    if not os.path.isdir(out_dir):
+        os.mkdir(out_dir)
+    return out_dir
+
+
 def get_output_path(nine_type):
     if nine_type is not None:
         output_name = get_nine_prefix(nine_type) + cfg['init_image'].split('.')[0]
@@ -95,10 +102,7 @@ def get_output_path(nine_type):
         output_name = get_prompt_label() + get_config_label()
         vqgan_type = cfg['vqgan_type'] if cfg['vqgan_type'] is not None else cfg['default_model']
         output_name += vqgan_type if vqgan_type != cfg['default_model'] else ''
-    out_dir = Path(cfg['output_dir']).resolve()
-    if not os.path.isdir(out_dir):
-        os.mkdir(out_dir)
-    output = out_dir.joinpath(output_name + ".png")
+    output = get_output_dir().joinpath(output_name + ".png")
     return output
 
 

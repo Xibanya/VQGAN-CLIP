@@ -20,11 +20,11 @@ from datetime import datetime
 from rudalle import get_realesrgan
 from rudalle.pipelines import super_resolution
 from CLIP import clip
-from XibGAN.Colors import print_green, print_cyan, print_warn
+from XibGAN.colors import print_green, print_cyan, print_warn
 from XibGAN.Utils import *
 from XibGAN.Config import (
     cfg, get_opt, get_perceptor, get_prompts, get_image_prompts, get_all_phrases, get_output_path,
-    set_seed
+    set_seed, get_output_dir
 )
 from XibGAN.Augments import get_cutout_function
 from XibGAN.Composite import paste_on_base, paste_on_overlay
@@ -38,6 +38,7 @@ def get_start_image():
 
 now = datetime.now().strftime("%dT%H-%M-%S")
 filename = f"{cfg['init_image'].split('.')[0]}_Composite_{now}.png"
+path = get_output_dir().joinpath(filename)
 
 
 # Vector quantize
@@ -163,12 +164,14 @@ def checkin(i, losses, model, z, nine_type):
         new_img = images[0]
     if nine_type is None or cfg['save_nine']:
         new_img.save(get_output_path(nine_type), pnginfo=info)
+
+    if nine_type is not None:
+        composite = Image.open(path)
+        composite = paste_on_base(composite, new_img, nine_type, path)
+        composite = paste_on_overlay(composite, new_img, nine_type, cfg['smooth'], path)
+        return composite
     else:
-        composite = Image.open(filename)
-        composite = paste_on_base(composite, new_img, nine_type, cfg['output_dir'], filename)
-        composite = paste_on_overlay(composite, new_img, nine_type, cfg['smooth'], cfg['output_dir'], filename)
-        composite.save(filename)
-    return new_img
+        return new_img
 
 
 def ascend_txt(i, z, perceptor, z_orig, make_cutouts, prompts, model):
@@ -369,21 +372,21 @@ def do_it(nine_type):
 
 def make_composite():
     composite = resize_image(get_start_image(), (cfg['size'][0] * 2, cfg['size'][1] * 2))
-    composite.save(filename)
+    composite.save(path)
     order = [0, 2, 6, 8, 1, 3, 5, 7, 4]
     for n in order:
         o_name = get_output_path(n)
         if Path.exists(o_name):
             print_green(f'{o_name} already exists, nice')
             next_img = Image.open(o_name)
-            composite = paste_on_base(composite, next_img, n, cfg['output_dir'], filename)
-            composite = paste_on_overlay(composite, next_img, n, cfg['smooth'], cfg['output_dir'], filename)
+            composite = paste_on_base(composite, next_img, n, path)
+            composite = paste_on_overlay(composite, next_img, n, cfg['smooth'], path)
         else:
-            do_it(n)
-    realesrgan = get_realesrgan('x4', device='cuda')
+            composite = do_it(n)
+    realesrgan = get_realesrgan(cfg['realesrgan_model'], device='cuda')
     composite = super_resolution([composite], realesrgan)[0]
-    composite.save(filename)
-    print_cyan(f'saved {filename}')
+    composite.save(path)
+    print_cyan(f'saved {path}')
 
 
 make_composite()
