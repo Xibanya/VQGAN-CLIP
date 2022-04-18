@@ -38,7 +38,9 @@ upscale_always: True # upscale every checkpoint (not used with nine slice in gen
 # this is only used by generate.py, generate_loop.py generates every slice
 nine_type:
 save_nine: False # save every slice as its own individual image
-smooth: 0.5 # composite smoothstep lower bound
+smooth:
+  - 0.1   # composite smoothstep lower bound
+  - 0.9   # composite smoothstep upper bound
 slice_prompts:
   - a pillar of white porcelain tiles
   - a skylight behind a pillar of white porcelain tiles
