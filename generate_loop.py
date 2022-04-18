@@ -27,7 +27,7 @@ from XibGAN.Config import (
     set_seed, get_output_dir
 )
 from XibGAN.Augments import get_cutout_function
-from XibGAN.Composite import paste_on_base, paste_on_overlay
+from XibGAN.Composite import paste_on_base, paste_on_overlay, combined
 
 
 def get_start_image():
@@ -42,8 +42,10 @@ def get_start_image():
     return img
 
 
-now = datetime.now().strftime("%dT%H-%M-%S")
-filename = f"{cfg['init_image'].split('.')[0]}_Composite_{now}.png"
+now = "_" + datetime.now().strftime("%dT%H-%M-%S")
+init_name = cfg['init_image'].split('.')[0]
+#now = ''
+filename = f"{init_name}_Composite{now}.png"
 path = get_output_dir().joinpath(filename)
 start_image = get_start_image()
 
@@ -385,10 +387,22 @@ def make_composite():
             composite = paste_on_overlay(composite, next_img, n, cfg['smooth'], path)
         else:
             composite = do_it(n)
+    if cfg['realesrgan']:
+        upscaled = Image.new("RGB", composite.size, (255, 255, 255))
+        upscaled.paste(composite, mask=composite.split()[3])
+        realesrgan = get_realesrgan(cfg['realesrgan_model'], device='cuda')
+        composite = super_resolution([upscaled], realesrgan)[0]
+    composite.save(path)
+    print_cyan(f'saved {path}')
+    return composite
+
+
+def make_combined():
+    composite = combined(init_name, cfg['output_dir'], cfg['smooth'], path)
     realesrgan = get_realesrgan(cfg['realesrgan_model'], device='cuda')
     composite = super_resolution([composite], realesrgan)[0]
     composite.save(path)
-    print_cyan(f'saved {path}')
 
 
 make_composite()
+#make_combined()
