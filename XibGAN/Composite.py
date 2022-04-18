@@ -1,7 +1,6 @@
 import numpy as np
-from PIL import Image
 from scipy.special import comb
-from datetime import datetime
+
 from .colors import print_cyan
 
 
@@ -46,6 +45,22 @@ def vertical_fade(im, smooth: float = 0.25):
     return im
 
 
+def center_fade(im, smooth: float = 0.25):
+    width, height = im.size
+    pixels = im.load()
+    for y in range(0, int(height)):
+        midpoint = int(height / 2)
+        Yalpha = ((midpoint - abs(midpoint - y)) / midpoint)
+        Yalpha = smoothstep(smooth, 1, Yalpha)
+        for x in range(0, int(width)):
+            midpoint = int(width / 2)
+            Xalpha = ((midpoint - abs(midpoint - x)) / midpoint)
+            Xalpha = smoothstep(smooth, 1, Xalpha)
+            alpha = Xalpha * Yalpha
+            pixels[x, y] = pixels[x, y][:3] + (int(alpha * 255),)
+    return im
+
+
 def paste_on_base(base, image, i, output_dir, name):
     if i == 0:
         i = 0
@@ -67,58 +82,12 @@ def paste_on_base(base, image, i, output_dir, name):
     return base
 
 
-# assuming all nine images passed in
-def get_base(images):
-    images = [images[0], images[2], images[6], images[8]]
-    w, h = images[0].size
-    size = w * 2
-    base = Image.new("RGB", (size, size))
-    for i in range(len(images)):
-        base.paste(images[i],
-                   (w if (i + 1) % 2 == 0 else 0,
-                    w if i > 1 else 0))
-    return base
-
-
-# assuming all nine images passed in
-def get_overlay(
-        images: list[Image],
-        smooth: float,
-        save: bool = False,
-        name: str = None,
-        output_dir: str = None
-):
-    img4 = images[4]
-    images = [images[1], images[3], images[5], images[7]]
-    w, h = images[0].size
-    size = w * 2
-    half_width = int(w / 2)
-    overlay = Image.new("RGBA", (size, size))
-    overlay.putalpha(0)
-    for i in range(len(images)):
-        if i == 0 or i == 3:
-            a_mask = horizontal_fade(images[i], smooth=smooth)
-            overlay.paste(images[i], (half_width, w if i > 1 else 0), mask=a_mask)
-        else:
-            a_mask = vertical_fade(images[i], smooth=smooth)
-            overlay.paste(images[i], (w if i > 1 else 0, half_width), mask=a_mask)
-
-    if img4 is not None:
-        img4Mask = horizontal_fade(img4, smooth)
-        img4Mask = vertical_fade(img4Mask, smooth)
-        overlay.paste(img4, (half_width, half_width), mask=img4Mask)
-    if save:
-        now = datetime.now().strftime("%dT%H-%M-%S")
-        overlay.save(f'{output_dir}/{name}_Overlay_{now}.png')
-    return overlay
-
-
 def paste_on_overlay(overlay, image, i, smooth, output_dir, name):
     w, h = image.size
     half_width = int(w / 2)
+    image.putalpha(255)
     if i == 4:
-        img4Mask = horizontal_fade(image, smooth)
-        img4Mask = vertical_fade(img4Mask, smooth)
+        img4Mask = center_fade(image, smooth=smooth)
         overlay.paste(image, (half_width, half_width), mask=img4Mask)
     elif i == 0 or i % 2 == 0:
         return overlay
